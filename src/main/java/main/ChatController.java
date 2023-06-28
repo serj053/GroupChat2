@@ -98,7 +98,7 @@ public class ChatController {
     //перечень сообщений
     @GetMapping("/message")
     public List<String> getMessagesList() {
-        return null;
+        return new ArrayList<>();
     }
 
     @GetMapping("/user")
