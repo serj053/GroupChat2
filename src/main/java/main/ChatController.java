@@ -1,11 +1,14 @@
 package main;
 
+import main.dto.DtoMessage;
+import main.dto.MessageMapper;
 import main.model.Message;
 import main.model.MessageRepository;
 import main.model.User;
 import main.model.UserRepository;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -14,6 +17,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 
@@ -23,13 +27,14 @@ public class ChatController {
     private MessageRepository messageRepository;
     @Autowired
     private UserRepository userRepository;
+    private MessageMapper messageMapper;
 
     //TODO: Check session. If found user -> true else false
     //init проверяет авторизацию
     @GetMapping("/init")
     public HashMap<String, Boolean> init() {
         HashMap<String, Boolean> response = new HashMap<>();
-        Map<String, Boolean> result = new HashMap<>();
+    //    Map<String, Boolean> result = new HashMap<>();
         //берём сессию и по этой сессии в базе находим пользователя
         String sessionId = RequestContextHolder.currentRequestAttributes().getSessionId();
         //идем в репозиторий и по sessionId находим user
@@ -43,7 +48,6 @@ public class ChatController {
             }
         }
         //если он существует -isPresent() , значит пользователь авторизован
-
         return response;
     }
 
@@ -97,8 +101,17 @@ public class ChatController {
 
     //перечень сообщений
     @GetMapping("/message")
-    public List<String> getMessagesList() {
-        return new ArrayList<>();
+    public List<DtoMessage> getMessagesList() {
+        //сначало получаем все сообщения через messageRepository
+        //messageRepository.findAll().stream().map(message->MessageMapper.map(message)).sorted();
+//        List<DtoMessage> result = messageRepository.findAll().stream().map(message->MessageMapper.map(message))
+//                .collect(Collectors.toList());
+        //выводим список сообщений отсортировав их по времени в базе (в момент вызова findAll())
+        return messageRepository
+                .findAll(Sort.by(Sort.Direction.ASC, "dateTime"))
+                .stream()
+                .map(message -> MessageMapper.map(message))
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/user")
